@@ -94,8 +94,16 @@ PRJXRAY_DB_HASH=517d66a383676cb971177ea92b0ff3b6ea6e8690
 # FPGA_ASSEMBLER_REPO is the repository that holds FPGA_ASSEMBLER_HASH.  Point it
 # at a fork to try fixes that are not merged yet; git_clone_update() moves an
 # existing checkout to it.
-FPGA_ASSEMBLER_REPO=https://github.com/hansfbaier/fpga-assembler.git
-FPGA_ASSEMBLER_HASH=cf0e3f08455d502fc6392889c07f482ab8dd2d62
+#
+# This branch pins kammoh/fpga-assembler integration/all-fixes: the
+# reference-parity tip 2368babb with the open hansfbaier/fpga-assembler pull
+# requests merged.  #2 skips OBUF_HP_BANK_GLUE where the OLOGIC holds a cell,
+# as fasm2frames does at PRJXRAY_HASH.  #3 builds on macOS 27 / Xcode 27.  #4
+# writes the data length into the .bit header, which stays 0 on macOS without
+# it, so openFPGALoader loads nothing.  Go back to the upstream repository once
+# they merge.
+FPGA_ASSEMBLER_REPO=https://github.com/kammoh/fpga-assembler.git
+FPGA_ASSEMBLER_HASH=67d755a8af686ab2f87ae7151cc721efa6b4026e
 BAZEL_VERSION=8.5.0
 
 # Portable "number of cpus" helper (macOS has no nproc by default).
