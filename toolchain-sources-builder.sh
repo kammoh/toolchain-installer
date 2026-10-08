@@ -90,6 +90,11 @@ PRJXRAY_DB_HASH=517d66a383676cb971177ea92b0ff3b6ea6e8690
 # pins nixpkgs' bazel_8, 8.5.0).  fpga-assembler's MODULE.bazel pins every direct
 # dependency to an exact version and the Bazel Central Registry keeps published
 # versions immutable, so unlike the flake this does not need a registry snapshot.
+#
+# FPGA_ASSEMBLER_REPO is the repository that holds FPGA_ASSEMBLER_HASH.  Point it
+# at a fork to try fixes that are not merged yet; git_clone_update() moves an
+# existing checkout to it.
+FPGA_ASSEMBLER_REPO=https://github.com/hansfbaier/fpga-assembler.git
 FPGA_ASSEMBLER_HASH=cf0e3f08455d502fc6392889c07f482ab8dd2d62
 BAZEL_VERSION=8.5.0
 
@@ -347,7 +352,7 @@ git_clone_update() (
 	case "$repo" in
 		yosys) repo_url=https://github.com/YosysHQ/yosys.git ;;
 		nextpnr|prjxray|prjxray-db) repo_url="https://github.com/openXC7/$repo.git" ;;
-		fpga-assembler) repo_url=https://github.com/hansfbaier/fpga-assembler.git ;;
+		fpga-assembler) repo_url=$FPGA_ASSEMBLER_REPO ;;
 		*) echo "Error: unknown repo $repo" >&2; return 1 ;;
 	esac
 	if [[ ! -d "$repo" ]]; then
@@ -356,6 +361,12 @@ git_clone_update() (
 	cd "$repo"
 	# Pinned checkouts have detached HEADs; git pull fails on the second run.
 	git fetch origin --tags
+	# A checkout cloned from another repository, such as the upstream of a fork
+	# pin, does not have the pinned commit.  Move it to the configured one.
+	if ! git cat-file -e "$repo_hash^{commit}" 2>/dev/null; then
+		git remote set-url origin "$repo_url"
+		git fetch origin --tags
+	fi
 	git checkout -- .
 	git checkout --detach "$repo_hash"
 	# --force discards local changes in submodules, such as the FASM patches of

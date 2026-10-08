@@ -113,6 +113,23 @@ class InstallerTests(unittest.TestCase):
         ''')
         self.assert_ok(result)
 
+    def test_checkout_moves_to_the_repository_of_a_fork_pin(self):
+        result = self.shell(r'''
+            git init -q upstream
+            echo source > upstream/source
+            git -C upstream add .
+            git -C upstream -c user.name=Test -c user.email=test@example.invalid commit -qm source
+            git clone -q upstream fork
+            echo fix > fork/source
+            git -C fork -c user.name=Test -c user.email=test@example.invalid commit -qam fix
+            git clone -q upstream fpga-assembler
+            FPGA_ASSEMBLER_REPO=$PWD/fork
+            git_clone_update fpga-assembler "$(git -C fork rev-parse HEAD)"
+            [[ $(git -C fpga-assembler rev-parse HEAD) == $(git -C fork rev-parse HEAD) ]]
+            [[ $(git -C fpga-assembler remote get-url origin) == "$PWD/fork" ]]
+        ''')
+        self.assert_ok(result)
+
     def test_nextpnr_reinstall_preserves_database_layout(self):
         result = self.shell(r'''
             OS=Linux
